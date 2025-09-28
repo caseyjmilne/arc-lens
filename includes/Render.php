@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace ARC\Lens;
 
@@ -25,16 +25,33 @@ class Render
             }
         }
 
-        // Prepare template variables
+        // Prepare any other needed data for the template
         $alias = $collectionKey;
-        $config = []; // optionally fetch actual collection config here
+        $config = []; // later we can fetch from the collection
 
+        // Front-end template that includes JS and the empty container
         $templateFile = ARC_LENS_PATH . 'templates/filter.php';
 
         if (file_exists($templateFile)) {
             include $templateFile;
         } else {
             echo '<p>Template not found.</p>';
+        }
+    }
+
+    /**
+     * Temporary helper to render items (server-side)
+     * using the new grid-wrapper + item-doc templates.
+     */
+    public static function renderItems($items)
+    {
+        $wrapperFile = ARC_LENS_PATH . 'templates/grid-wrapper.php';
+
+        if (!empty($items) && file_exists($wrapperFile)) {
+            // $items will be available inside the wrapper
+            include $wrapperFile;
+        } else {
+            echo '<p>No items available.</p>';
         }
     }
 }

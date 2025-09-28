@@ -26,7 +26,19 @@ class AdminPage
     {
         echo '<div class="wrap">';
         echo '<h1>ARC Lens</h1>';
+
+        // Step 1: Filters (from filter.php)
         Render::output('docs');
+
+        // Step 2: Test items
+        $items = [
+            ['title' => 'Doc A', 'author_id' => 5, 'status' => 'draft'],
+            ['title' => 'Doc B', 'author_id' => 12, 'status' => 'published'],
+        ];
+        Render::renderItems($items);
+
         echo '</div>';
     }
+
+
 }

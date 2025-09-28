@@ -21,7 +21,6 @@ define('ARC_LENS_FILE', __FILE__);
 
 class Plugin
 {
-    
     public function __construct()
     {
         $this->includes();
@@ -33,14 +32,15 @@ class Plugin
         require_once ARC_LENS_PATH . 'includes/Render.php';
         require_once ARC_LENS_PATH . 'includes/AdminPage.php';
         require_once ARC_LENS_PATH . 'includes/Enqueue.php';
+        require_once ARC_LENS_PATH . 'includes/Endpoints/RenderRoute.php';
     }
 
     private function init()
     {
         new AdminPage();
         new Enqueue();
+        new Endpoints\RenderRoute();
     }
-
 }
 
 new Plugin();
