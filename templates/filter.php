@@ -1,12 +1,38 @@
 <?php
 /**
- * Default filter template
+ * Filter group template
+ * Variables provided:
+ * - $alias         (string)
+ * - $config        (array)
+ * - $getAllRoute   (string)
  */
+
+$collectionData = [
+    'alias'  => $alias,
+    'config' => $config,
+];
 ?>
-<select class="arc-lens-filter" name="sort">
-    <option value="">Sort By</option>
-    <option value="title">Title</option>
-    <option value="created_at">Created Date</option>
-    <option value="updated_at">Last Updated</option>
-    <option value="status">Status</option>
-</select>
+<div class="arc-lens-wrapper"
+     data-collection='<?php echo esc_attr(json_encode($collectionData)); ?>'
+     data-fetch-route='<?php echo esc_attr($getAllRoute); ?>'>
+
+    <!-- Filter 1 -->
+    <div class="arc-lens-filter" data-filter-key="status">
+        <label>Status</label>
+        <select>
+            <option value="">All</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+        </select>
+    </div>
+
+    <!-- Filter 2 -->
+    <div class="arc-lens-filter" data-filter-key="author_id">
+        <label>Author</label>
+        <select>
+            <option value="">All</option>
+            <option value="1">Author 1</option>
+            <option value="2">Author 2</option>
+        </select>
+    </div>
+</div>

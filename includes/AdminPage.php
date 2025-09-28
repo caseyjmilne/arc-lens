@@ -17,8 +17,8 @@ class AdminPage
             'manage_options',            // Capability
             'arc-lens',                  // Menu slug
             [$this, 'render_admin_page'], // Callback
-            '',                          // Icon (none for now)
-            99                           // Position (low in menu)
+            '',                          // Icon
+            99                           // Position
         );
     }
 
@@ -26,7 +26,7 @@ class AdminPage
     {
         echo '<div class="wrap">';
         echo '<h1>ARC Lens</h1>';
-        echo Render::filter();
+        Render::output('docs');
         echo '</div>';
     }
 }
