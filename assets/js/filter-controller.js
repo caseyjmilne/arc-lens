@@ -1,100 +1,160 @@
 class FilterController {
-    constructor(wrapper) {
-        this.wrapper = wrapper;
-
-        // Fixed route for rendering HTML templates
-        this.renderRoute = '/wp-json/arc-lens/v1/render';
-
-        // Filters object
-        this.filters = {};
-
-        // Cache filter wrappers
-        this.filterWrappers = this.wrapper.querySelectorAll('[data-filter-key]');
-
+    constructor(container) {
+        this.container = container;
+        this.collection = container.dataset.collection;
+        this.apiRoute = container.dataset.apiRoute;
+        this.renderRoute = container.dataset.renderRoute;
+        
+        this.form = container.querySelector('.arc-lens-filters');
+        this.resultsContainer = container.querySelector('.arc-lens-results');
+        this.countElement = container.querySelector('[id^="arc-lens-count-"]');
+        this.loadingElement = container.querySelector('.arc-lens-loading');
+        
+        if (!this.form || !this.resultsContainer) {
+            console.error('[Lens] Missing required elements in container');
+            return;
+        }
+        
         this.init();
     }
-
+    
     init() {
-        this.setupChangeHandlers();
-
-        // Initial fetch
-        this.fetchModelData();
+        this.setupFormHandler();
+        this.loadInitialResults();
     }
-
-    setupChangeHandlers() {
-        this.filterWrappers.forEach(wrapper => {
-            const key = wrapper.dataset.filterKey;
-
-            // Find the actual control inside the filter wrapper
-            const control = wrapper.querySelector('[data-filter-control]');
-            if (!control) {
-                console.warn('[Lens] No control found inside filter wrapper for key:', key);
-                return;
-            }
-
-            // Listen for input/change events
-            const eventType = control.tagName === 'INPUT' ? 'input' : 'change';
-            control.addEventListener(eventType, () => {
-                this.filters[key] = control.value;
-                this.fetchModelData(); // Existing API call
-            });
+    
+    setupFormHandler() {
+        // Handle form submit
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.applyFilters();
         });
+        
+        // Handle reset
+        const resetBtn = this.form.querySelector('.arc-lens-filter-reset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.form.reset();
+                this.applyFilters();
+            });
+        }
     }
-
-    // Call the model API (existing working part)
-    fetchModelData() {
-        const modelRoute = this.wrapper.dataset.fetchRoute;
-        const params = new URLSearchParams(this.filters);
-        const url = modelRoute + (params.toString() ? '?' + params.toString() : '');
-
-        console.log('[Lens] Fetching model data from:', url);
-
+    
+    loadInitialResults() {
+        this.applyFilters();
+    }
+    
+    applyFilters() {
+        const formData = new FormData(this.form);
+        const params = new URLSearchParams();
+        
+        // Build query params from form
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        const url = this.apiRoute + '?' + params.toString();
+        
+        console.log('[Lens] Fetching from:', url);
+        
+        this.showLoading();
+        
         fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                console.log('[Lens] Model data fetched:', data);
-
-                // Access the items array in the response
-                const records = data?.data?.data?.items || [];
-                this.fetchRenderedHTML(records);
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
             })
-            .catch(err => console.error('[Lens] Model fetch error:', err));
+            .then(data => {
+                console.log('[Lens] API response:', data);
+                
+                // Extract records from Gateway response format
+                const records = data?.data?.items || data?.items || [];
+                
+                this.updateCount(records.length);
+                this.renderItems(records);
+            })
+            .catch(err => {
+                console.error('[Lens] Fetch error:', err);
+                this.showError('Failed to load results');
+            })
+            .finally(() => {
+                this.hideLoading();
+            });
     }
-
-    // Call the render route to get HTML
-    fetchRenderedHTML(records) {
-        console.log('[Lens] Sending records to render route:', records);
-
+    
+    renderItems(records) {
+        console.log('[Lens] Rendering items:', records);
+        
         fetch(this.renderRoute, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ records }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                records: records,
+                collection: this.collection
+            })
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
             console.log('[Lens] Render response:', data);
-
-            const html = data?.html || '<p>No items found.</p>';
-
-            // Find the .arc-lens-grid that comes after the wrapper
-            let grid = this.wrapper.nextElementSibling;
-            if (!grid || !grid.classList.contains('arc-lens-grid')) {
-                console.warn('[Lens] Could not find .arc-lens-grid after wrapper.');
-                return;
+            
+            if (data.success && data.html) {
+                this.resultsContainer.innerHTML = data.html;
             } else {
-                // Replace grid content
-                grid.innerHTML = html.trim();
+                this.showError('Failed to render results');
             }
-
-            console.log('[Lens] Grid updated successfully.');
         })
-        .catch(err => console.error('[Lens] Render fetch error:', err));
+        .catch(err => {
+            console.error('[Lens] Render error:', err);
+            this.showError('Failed to render results');
+        });
+    }
+    
+    updateCount(count) {
+        if (this.countElement) {
+            this.countElement.textContent = count;
+        }
+    }
+    
+    showLoading() {
+        if (this.loadingElement) {
+            this.loadingElement.style.display = 'block';
+        }
+        if (this.resultsContainer) {
+            this.resultsContainer.style.opacity = '0.5';
+        }
+    }
+    
+    hideLoading() {
+        if (this.loadingElement) {
+            this.loadingElement.style.display = 'none';
+        }
+        if (this.resultsContainer) {
+            this.resultsContainer.style.opacity = '1';
+        }
+    }
+    
+    showError(message) {
+        if (this.resultsContainer) {
+            this.resultsContainer.innerHTML = `<p style="color: red;">${message}</p>`;
+        }
     }
 }
 
-// Initialize for all wrappers
+// Initialize all FilterControllers
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.arc-lens-wrapper').forEach(wrapper => {
-        new FilterController(wrapper);
+    document.querySelectorAll('.arc-lens-container').forEach(container => {
+        new FilterController(container);
     });
 });

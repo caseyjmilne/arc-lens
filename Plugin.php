@@ -29,7 +29,6 @@ class Plugin
 
     private function includes()
     {
-        require_once ARC_LENS_PATH . 'includes/Render.php';
         require_once ARC_LENS_PATH . 'includes/AdminPage.php';
         require_once ARC_LENS_PATH . 'includes/Enqueue.php';
         require_once ARC_LENS_PATH . 'includes/Endpoints/RenderRoute.php';
@@ -40,6 +39,7 @@ class Plugin
         require_once ARC_LENS_PATH . 'includes/FilterTypes/Checkbox.php';
         require_once ARC_LENS_PATH . 'includes/FilterTypes/Search.php';
         require_once ARC_LENS_PATH . 'includes/FilterTypes/Select.php';
+        require_once ARC_LENS_PATH . 'includes/helpers.php';
     }
 
     private function init()
@@ -47,6 +47,9 @@ class Plugin
         new AdminPage();
         new Enqueue();
         new Endpoints\RenderRoute();
+        
+        // Hook for other plugins to register their FilterSets
+        do_action('arc_lens_register_filtersets');
     }
 }
 

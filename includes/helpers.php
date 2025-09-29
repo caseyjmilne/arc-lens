@@ -1,6 +1,7 @@
 <?php
 /**
- * Helper functions for ARC Lens
+ * Global helper functions for ARC Lens
+ * These functions are available globally (not namespaced)
  */
 
 if (!defined('ABSPATH')) exit;
@@ -56,32 +57,4 @@ function arc_lens_register($collectionKey, ARC\Lens\FilterSet $filterSet)
 function arc_lens_has_filterset($collectionKey)
 {
     return ARC\Lens\FilterSetRegistry::has($collectionKey);
-}
-
-/**
- * Helper function to render a FilterSet
- * 
- * Usage in template:
- * arc_lens_render('docs');
- */
-function arc_lens_render($collectionKey)
-{
-    $filterSet = FilterSetRegistry::get($collectionKey);
-    
-    if (!$filterSet) {
-        echo '<p>No FilterSet registered for: ' . esc_html($collectionKey) . '</p>';
-        return;
-    }
-    
-    $filterSet->render();
-}
-
-
-/**
- * Helper to get FilterSet instance
- * Useful for RenderRoute to access correct templates
- */
-function arc_lens_get_filterset($collectionKey)
-{
-    return FilterSetRegistry::get($collectionKey);
 }
