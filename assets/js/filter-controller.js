@@ -79,12 +79,8 @@ class FilterController {
             // Find the .arc-lens-grid that comes after the wrapper
             let grid = this.wrapper.nextElementSibling;
             if (!grid || !grid.classList.contains('arc-lens-grid')) {
-                console.warn('[Lens] Could not find .arc-lens-grid after wrapper. Appending new grid.');
-                
-                const newGrid = document.createElement('div');
-                newGrid.className = 'arc-lens-grid';
-                newGrid.innerHTML = html.trim();
-                this.wrapper.insertAdjacentElement('afterend', newGrid);
+                console.warn('[Lens] Could not find .arc-lens-grid after wrapper.');
+                return;
             } else {
                 // Replace grid content
                 grid.innerHTML = html.trim();
