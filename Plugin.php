@@ -33,6 +33,13 @@ class Plugin
         require_once ARC_LENS_PATH . 'includes/AdminPage.php';
         require_once ARC_LENS_PATH . 'includes/Enqueue.php';
         require_once ARC_LENS_PATH . 'includes/Endpoints/RenderRoute.php';
+        require_once ARC_LENS_PATH . 'includes/FilterSetRegistry.php';
+        require_once ARC_LENS_PATH . 'includes/FilterSet.php';
+        require_once ARC_LENS_PATH . 'includes/Filter.php';
+        require_once ARC_LENS_PATH . 'includes/FilterTypes/FilterType.php';
+        require_once ARC_LENS_PATH . 'includes/FilterTypes/Checkbox.php';
+        require_once ARC_LENS_PATH . 'includes/FilterTypes/Search.php';
+        require_once ARC_LENS_PATH . 'includes/FilterTypes/Select.php';
     }
 
     private function init()

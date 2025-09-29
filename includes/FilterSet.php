@@ -38,15 +38,6 @@ abstract class FilterSet
     protected $filters = [];
 
     /**
-     * Get filters - override this to define filters programmatically
-     * If not overridden, uses $filters property
-     */
-    protected function getFilters()
-    {
-        return $this->filters;
-    }
-
-    /**
      * Default query modifications (sorting, limits, etc.)
      */
     protected $defaultQuery = [
@@ -155,9 +146,11 @@ abstract class FilterSet
     }
 
     /**
-     * Get filter configuration for this FilterSet
+     * Get filters for this FilterSet
+     * Override this method to define filters programmatically
+     * Or use the $filters property for simple cases
      */
-    public function getFilters()
+    protected function getFilters()
     {
         return $this->filters;
     }
@@ -181,37 +174,28 @@ abstract class FilterSet
     // --- Private Helper Methods ---
 
     /**
-     * Create FilterType instances from filter config
+     * Create Filter instances from config
+     * Handles both array configs and Filter objects
      */
     private function createFilterInstances()
     {
         $instances = [];
+        $filters = $this->getFilters();
         
-        foreach ($this->filters as $key => $config) {
-            $type = $config['type'] ?? 'text';
-            $className = $this->getFilterTypeClass($type);
+        foreach ($filters as $key => $config) {
+            // If already a Filter instance, use it
+            if ($config instanceof Filter) {
+                $instances[$key] = $config;
+                continue;
+            }
             
-            if (class_exists($className)) {
-                $instances[$key] = new $className($key, $config, $this->collection);
+            // Otherwise create from array config
+            if (is_array($config)) {
+                $instances[$key] = Filter::fromArray($key, $config, $this->collection);
             }
         }
         
         return $instances;
-    }
-
-    /**
-     * Get FilterType class name from type string
-     */
-    private function getFilterTypeClass($type)
-    {
-        $typeMap = [
-            'select' => 'ARC\\Lens\\FilterTypes\\Select',
-            'search' => 'ARC\\Lens\\FilterTypes\\Search',
-            'text' => 'ARC\\Lens\\FilterTypes\\Search',
-            'checkbox' => 'ARC\\Lens\\FilterTypes\\Checkbox',
-        ];
-        
-        return $typeMap[$type] ?? 'ARC\\Lens\\FilterTypes\\Search';
     }
 
     /**
@@ -237,7 +221,7 @@ abstract class FilterSet
         $scripts = [];
         
         foreach ($filterInstances as $filter) {
-            $script = $filter->renderInlineScript();
+            $script = $filter->getInlineScript();
             if (!empty($script)) {
                 $scripts[] = $script;
             }
@@ -297,39 +281,5 @@ abstract class FilterSet
                 echo '<p>Filter template not found</p>';
             }
         }
-    }
-}
-
-
-/**
- * Registry for FilterSets
- * Allows lookup by collection key
- */
-class FilterSetRegistry
-{
-    private static $registry = [];
-
-    /**
-     * Register a FilterSet instance
-     */
-    public static function register($collectionKey, FilterSet $filterSet)
-    {
-        self::$registry[$collectionKey] = $filterSet;
-    }
-
-    /**
-     * Get FilterSet for a collection
-     */
-    public static function get($collectionKey)
-    {
-        return self::$registry[$collectionKey] ?? null;
-    }
-
-    /**
-     * Check if FilterSet exists for collection
-     */
-    public static function has($collectionKey)
-    {
-        return isset(self::$registry[$collectionKey]);
     }
 }
